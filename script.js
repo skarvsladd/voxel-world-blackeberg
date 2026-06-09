@@ -1,4 +1,5 @@
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.module.min.js';
+// Import the full Three.js module and the pointer lock controls from the same version.
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
 import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/PointerLockControls.js';
 
 let scene, camera, renderer, controls;
@@ -125,9 +126,15 @@ function loadMapData() {
                 cubes.push(building);
             }
         });
+        // If no cubes were created (e.g. API returned no data), add placeholder cubes
+        if (cubes.length === 0) {
+            addPlaceholderCubes();
+        }
     })
     .catch(err => {
         console.error('Failed to load map data:', err);
+        // When the API call fails, add placeholder cubes so the world isn't empty
+        addPlaceholderCubes();
     });
 }
 
@@ -174,6 +181,24 @@ function raycast() {
     raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
     const intersects = raycaster.intersectObjects(cubes);
     selected = intersects.length > 0 ? intersects[0].object : null;
+}
+
+/**
+ * Add a simple grid of placeholder cubes when map data isn't available.
+ */
+function addPlaceholderCubes() {
+    // Create a 5x5 grid of cubes centered around the origin
+    for (let i = -2; i <= 2; i++) {
+        for (let j = -2; j <= 2; j++) {
+            const height = 4;
+            const geo = new THREE.BoxGeometry(4, height, 4);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x8080ff });
+            const cube = new THREE.Mesh(geo, mat);
+            cube.position.set(i * 6, height / 2, j * 6);
+            scene.add(cube);
+            cubes.push(cube);
+        }
+    }
 }
 
 /**
